@@ -45,7 +45,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Border Style="{StaticResource NavigationItem.Border}">
+    <Border Style="{StaticResource NavigationItem.Border}" MouseLeftButtonUp="Border_MouseLeftButtonUp">
         <WrapPanel VerticalAlignment="Center">
             <icons:MaterialIcon Kind="{Binding Icon, ElementName=Root}" Foreground="{StaticResource Icon}" Height="24" Margin="0,0,8,0"/>
             <TextBlock Style="{StaticResource NavigationItem.Text}" Text="{Binding ElementName=Root, Path=Title}"></TextBlock>

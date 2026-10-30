@@ -5,12 +5,16 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DeskWatch.Desktop"
         xmlns:controls="clr-namespace:DeskWatch.Desktop.Controls"
+        xmlns:Screens="clr-namespace:DeskWatch.Desktop.Screens"
         xmlns:icons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
         mc:Ignorable="d"
         Title="DeskWatch" Height="450" Width="800">
 
     <Window.Resources>
         <ResourceDictionary>
+            
+            <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Assets/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
@@ -50,8 +54,8 @@
                 </Grid>
 
                 <StackPanel Grid.Row="1" Margin="0, 16, 0, 16" VerticalAlignment="Top" HorizontalAlignment="Stretch">
-                    <controls:NavigationItem Icon="Home" Title="Dashboard" Selected="true"></controls:NavigationItem>
-                    <controls:NavigationItem Icon="Events" Title="Event Log"></controls:NavigationItem> 
+                    <controls:NavigationItem Icon="Home" Title="Dashboard" Selected="{Binding Path=DashboardIsSelected}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"></controls:NavigationItem>
+                    <controls:NavigationItem Icon="Events" Title="Event Log" Selected="{Binding Path=EventsIsSelected}" Command="{Binding NavigateCommand}" CommandParameter="Events"></controls:NavigationItem> 
                 </StackPanel>
 
                 <Grid Grid.Row="2" HorizontalAlignment="Center">
@@ -69,7 +73,9 @@
             </Grid>
         </Border>
         
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <Screens:DashboardScreen Visibility="{Binding DashboardIsSelected, Converter={StaticResource BoolToVisibilityConverter}}"></Screens:DashboardScreen>
+            <Screens:EventLogScreen Visibility="{Binding EventsIsSelected, Converter={StaticResource BoolToVisibilityConverter}}"></Screens:EventLogScreen>
         </Grid>
     </Grid>
 </Window>

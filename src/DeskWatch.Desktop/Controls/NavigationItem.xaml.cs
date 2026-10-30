@@ -1,6 +1,8 @@
-﻿using Material.Icons;
+﻿using DeskWatch.Desktop.ViewModels;
+using Material.Icons;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace DeskWatch.Desktop.Controls
 {
@@ -32,9 +34,28 @@ namespace DeskWatch.Desktop.Controls
             set => SetValue(SelectedProperty, value);
         }
 
+        public static readonly DependencyProperty CommandProperty = DependencyProperty.Register(nameof(Command), typeof(ICommand), typeof(NavigationItem), new PropertyMetadata(null));
+        public ICommand Command
+        {
+            get => (ICommand)GetValue(CommandProperty);
+            set => SetValue(CommandProperty, value);
+        }
+
+        public static readonly DependencyProperty CommandParameterProperty = DependencyProperty.Register(nameof(CommandParameter), typeof(Screen), typeof(NavigationItem), new PropertyMetadata(Screen.Dashboard));
+        public Screen? CommandParameter
+        {
+            get => (Screen?)GetValue(CommandParameterProperty);
+            set => SetValue(CommandParameterProperty, value);
+        }
+
         public NavigationItem()
         {
             InitializeComponent();
+        }
+
+        private void Border_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            Command?.Execute(CommandParameter);
         }
     }
 }
