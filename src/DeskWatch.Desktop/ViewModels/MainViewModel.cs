@@ -20,6 +20,13 @@ namespace DeskWatch.Desktop.ViewModels
 
         public ICommand NavigateCommand { get; }
 
+        public IEnumerable<LogEntry> Events { get; }
+         = new List<LogEntry> {
+            new LogEntry { Timestamp = "15:12:03.965", Event = "connection.synchorinzed", Message = "Time is synchronized." },
+            new LogEntry { Timestamp = "15:12:02.358", Event = "connection.established", Message = "Device is connected." },
+            new LogEntry { Timestamp = "15:12:02.124", Event = "device.started", Message = "Device has been started. Waiting for connection..." }
+        };
+
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler? CanExecuteChanged;
 
@@ -37,5 +44,12 @@ namespace DeskWatch.Desktop.ViewModels
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+    }
+
+    public record LogEntry
+    {
+        public required string Timestamp { get; init; }
+        public required string Event { get; init; }
+        public required string Message { get; init; }
     }
 }

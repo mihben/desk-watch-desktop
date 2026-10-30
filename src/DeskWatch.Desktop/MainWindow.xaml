@@ -21,61 +21,213 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Style="{StaticResource Grid.Main}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="6*"></ColumnDefinition>
-        </Grid.ColumnDefinitions>
+    <Border Style="{StaticResource Panel.Main}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <Border Style="{StaticResource Border.NavigationPanel}">
-            <Grid Grid.Column="0" Style="{StaticResource Grid.Panel}"  HorizontalAlignment="Stretch">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="auto"/>
-                </Grid.RowDefinitions>
-
-                <Grid Grid.Row="0" HorizontalAlignment="Center">
+            <Border Grid.Row="0" Style="{StaticResource Section}">
+                <Grid VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <icons:MaterialIcon Kind="WatchVariant" Width="40" Margin="0,0,4,0" VerticalAlignment="Stretch" HorizontalAlignment="Center" Foreground="{StaticResource Icon}"/>
-                    <Grid Grid.Column="1">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="auto"></RowDefinition>
-                            <RowDefinition Height="auto"></RowDefinition>
-                        </Grid.RowDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <icons:MaterialIcon Kind="Monitor" Style="{StaticResource Icon.Logo}" Margin="0,0,8,0"/>
+                        <TextBlock Style="{StaticResource Text.Header}" Text="DeskWatch"></TextBlock>
+                        <Border Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
+                            <TextBlock Style="{StaticResource Text.Success}" Text="Connected"></TextBlock>
+                        </Border>
+                    </StackPanel>
 
-                        <TextBlock Grid.Row="0" Style="{StaticResource TextBlock.Banner}" Text="DeskWatch"/>
-                        <TextBlock Grid.Row="1" Style="{StaticResource TextBlock.Hint}" Text="Device Control And Monitoring"/>
-                    </Grid>
+                    <TextBlock Grid.Column="1" Style="{StaticResource Text.Secondary}" Text="v1.0.0"></TextBlock>
                 </Grid>
+            </Border>
 
-                <StackPanel Grid.Row="1" Margin="0, 16, 0, 16" VerticalAlignment="Top" HorizontalAlignment="Stretch">
-                    <controls:NavigationItem Icon="Home" Title="Dashboard" Selected="{Binding Path=DashboardIsSelected}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"></controls:NavigationItem>
-                    <controls:NavigationItem Icon="Events" Title="Event Log" Selected="{Binding Path=EventsIsSelected}" Command="{Binding NavigateCommand}" CommandParameter="Events"></controls:NavigationItem> 
-                </StackPanel>
-
-                <Grid Grid.Row="2" HorizontalAlignment="Center">
+            <Border Grid.Row="1" Style="{StaticResource Section}">
+                <Grid Grid.Row="1" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Style="{StaticResource Text.Label}" Text="DEVICE STATUS"></TextBlock>
+
+                    <Grid Grid.Row="1" Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="ONLINE" Style="{StaticResource Text}"/>
+                        <Border Grid.Column="1" Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
+                            <TextBlock Style="{StaticResource Text.Success}" Text="READY"></TextBlock>
+                        </Border>
+                    </Grid>
+
+                    <UniformGrid Grid.Row="2" Margin="4,8,0,0" Columns="3">
+                        <StackPanel>
+                            <TextBlock Grid.Column="0" Text="Serial Port" Style="{StaticResource Text.Label}"/>
+                            <TextBlock Grid.Column="0" Text="COM3" Style="{StaticResource Text}"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Grid.Column="0" Text="Last Update" Style="{StaticResource Text.Label}"/>
+                            <TextBlock Grid.Column="0" Text="09:20:04" Style="{StaticResource Text}"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <TextBlock Grid.Column="0" Text="Firmware" Style="{StaticResource Text.Label}"/>
+                            <TextBlock Grid.Column="0" Text="1.0.0" Style="{StaticResource Text}"/>
+                        </StackPanel>
+                    </UniformGrid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2" Style="{StaticResource Section}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
 
-                    <WrapPanel Grid.Row="0">
-                        <Ellipse Height="12" Width="12" Fill="{StaticResource Status.Success}" Margin="0,0,8,0"></Ellipse>
-                        <TextBlock Grid.Row="0" Style="{StaticResource TextBlock}" >Connection: Active</TextBlock>
-                    </WrapPanel>
-                    <TextBlock Grid.Row="1" Style="{StaticResource TextBlock.Hint}" Margin="20,0,0,0">Port: COM3 (9600)</TextBlock>
+                    <TextBlock Grid.Row="0" Text="DEVICE INFORMATION" Style="{StaticResource Text.Label}"></TextBlock>
+
+                    <Grid Grid.Row="1" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Clock time" Style="{StaticResource Text.Label}"></TextBlock>
+                        <TextBlock Grid.Column="1" Text="09:20:14" Style="{StaticResource Text}"></TextBlock>
+                    </Grid>
+
+                    <Grid Grid.Row="2" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Device state" Style="{StaticResource Text.Label}"></TextBlock>
+                        <TextBlock Grid.Column="1" Text="RUNNING" Style="{StaticResource Text}"></TextBlock>
+                    </Grid>
+
+                    <Grid Grid.Row="3" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Display" Style="{StaticResource Text.Label}"></TextBlock>
+                        <TextBlock Grid.Column="1" Text="ACTIVE" Style="{StaticResource Text}"></TextBlock>
+                    </Grid>
+
+                    <Grid Grid.Row="4" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Synchronization" Style="{StaticResource Text.Label}"></TextBlock>
+                        <Border Grid.Column="1" Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
+                            <TextBlock Style="{StaticResource Text.Success}" Text="SYNCED"></TextBlock>
+                        </Border>
+                    </Grid>
                 </Grid>
-            </Grid>
-        </Border>
-        
-        <Grid Grid.Column="1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-            <Screens:DashboardScreen Visibility="{Binding DashboardIsSelected, Converter={StaticResource BoolToVisibilityConverter}}"></Screens:DashboardScreen>
-            <Screens:EventLogScreen Visibility="{Binding EventsIsSelected, Converter={StaticResource BoolToVisibilityConverter}}"></Screens:EventLogScreen>
+            </Border>
+
+            <Border Grid.Row="3" Style="{StaticResource Section}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+
+                    <UniformGrid Grid.Row="0" Columns="2" Rows="2" Margin="0,0,0,4">
+
+                        <Button Margin="0,0,4,4">
+                            <StackPanel Orientation="Horizontal">
+                                <icons:MaterialIcon Kind="LanConnect" Margin="0,0,4,0" Height="16"/>
+                                <TextBlock Text="Connect"></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Button Margin="0,0,4,4">
+                            <StackPanel Orientation="Horizontal">
+                                <icons:MaterialIcon Kind="LanDisconnect" Margin="0,0,4,0" Height="16"/>
+                                <TextBlock Text="Disconnect"></TextBlock>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Margin="0,0,4,4">
+                            <StackPanel Orientation="Horizontal">
+                                <icons:MaterialIcon Kind="MoonWaningCrescent" Margin="0,0,4,0" Height="16"/>
+                                <TextBlock Text="Sleep"></TextBlock>
+                            </StackPanel>
+                        </Button>
+                        <Button Margin="0,0,4,4">
+                            <StackPanel Orientation="Horizontal">
+                                <icons:MaterialIcon Kind="WeatherSunny" Margin="0,0,4,0" Height="16"/>
+                                <TextBlock Text="Wake Up"></TextBlock>
+                            </StackPanel>
+                        </Button>
+                    </UniformGrid>
+
+                    <Button Margin="0,0,4,4"  Grid.Row="1">
+                        <StackPanel Orientation="Horizontal">
+                            <icons:MaterialIcon Kind="Sync" Margin="0,0,4,0" Height="16"/>
+                            <TextBlock Text="Synchronize"></TextBlock>
+                        </StackPanel>
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="4" Style="{StaticResource Section}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Event Log" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+
+                    <ListView Grid.Row="1" Background="Transparent" BorderThickness="0" Grid.IsSharedSizeScope="True" ItemsSource="{Binding Events}" SelectionMode="Extended">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="auto" SharedSizeGroup="timespan"/>
+                                        <ColumnDefinition Width="auto" SharedSizeGroup="event"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Grid.Column="0" Width="12" Height="12" BorderBrush="{StaticResource Background.Success}" BorderThickness="2" CornerRadius="25" Padding="1">
+                                        <Border Background="{StaticResource Background.Success}" CornerRadius="25"></Border>
+                                    </Border>
+
+                                    <TextBlock Margin="16,0,0,0" Grid.Column="1" Text="{Binding Timestamp}" VerticalAlignment="Center" Style="{StaticResource Text.Secondary}"/>
+                                    <TextBlock Margin="16,0,0,0" Grid.Column="2" Text="{Binding Event}" VerticalAlignment="Center" Style="{StaticResource Text}"/>
+                                    <TextBlock Margin="16,0,0,0" Grid.Column="3" Text="{Binding Message}" VerticalAlignment="Center" Style="{StaticResource Text}"/>
+                                </Grid>
+                            </DataTemplate>                            
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+
+
+            </Border>
         </Grid>
-    </Grid>
+    </Border>
 </Window>
+

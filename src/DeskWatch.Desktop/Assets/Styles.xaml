@@ -1,74 +1,86 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:icon="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF">
 
     <SolidColorBrush x:Key="Background.Main" Color="#0B1220" />
-    <SolidColorBrush x:Key="Background.Panel" Color="#101C2D" />
-    <SolidColorBrush x:Key="Background.Active" Color="#1D2D43" />
+    <SolidColorBrush x:Key="Background.Surface" Color="#111C2E" />
 
-    <SolidColorBrush x:Key="Border" Color="#334155"/>
+    <SolidColorBrush x:Key="Border" Color="#26364D"/>
+    <SolidColorBrush x:Key="Border.Subtle" Color="#1C2A3E"/>
 
-    <SolidColorBrush x:Key="Icon" Color="#38BDF8"/>
+    <SolidColorBrush x:Key="Foreground.Primary" Color="#E8EEF7"/>
+    <SolidColorBrush x:Key="Foreground.Secondary" Color="#A0AEC0"/>
+    <SolidColorBrush x:Key="Foreground.Muted" Color="#718198"/>
+    <SolidColorBrush x:Key="Foreground.Disabled" Color="#46556B"/>
 
-    <SolidColorBrush x:Key="Color.Primary" Color="#2684FF"/>
-    <SolidColorBrush x:Key="Color.Secondary" Color="#1D2D43"/>
+    <SolidColorBrush x:Key="Background.Success" Color="#34D399"/>
+    <SolidColorBrush x:Key="Foreground.Success" Color="#12372F"/>
+    <SolidColorBrush x:Key="Border.Success" Color="#12372F"/>
 
-    <SolidColorBrush x:Key="Text.Primary" Color="#E6EDF7"/>
-    <SolidColorBrush x:Key="Text.Secondary" Color="#94A9C5"/>
-
-    <SolidColorBrush x:Key="Status.Success" Color="#20D6A0"/>
-    <SolidColorBrush x:Key="Status.Warning" Color="#F5B942"/>
-    <SolidColorBrush x:Key="Status.Error" Color="#EF4444"/>
-
-    <Style x:Key="Grid.Main" TargetType="{x:Type Grid}">
-        <Setter Property="Background" Value="{StaticResource ResourceKey=Background.Main}"></Setter>
+    <Style x:Key="Panel.Main" TargetType="{x:Type Border}">
+        <Setter Property="Background" Value="{StaticResource Background.Main}"/>
+        <Setter Property="Padding" Value="16"/>
     </Style>
 
-    <Style x:Key="Grid.Panel" TargetType="{x:Type Grid}">
-        <Setter Property="HorizontalAlignment" Value="Center"></Setter>
+    <Style x:Key="Section" TargetType="{x:Type Border}">
+        <Setter Property="BorderBrush" Value="{StaticResource Border.Subtle}"></Setter>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="Padding" Value="0,16,0,16"/>
     </Style>
 
-    <Style x:Key="Border.Panel" TargetType="{x:Type Border}">
-        <Setter Property="Padding" Value="0, 16, 0, 16"/>
-        <Setter Property="Background" Value="{StaticResource ResourceKey=Background.Panel}"></Setter>
-        <Setter Property="CornerRadius" Value="4"/>
-        <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
-        <Setter Property="BorderThickness" Value="1"/>
+    <Style x:Key="Badge" TargetType="{x:Type Border}">
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="8,4,8,4"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
-    <Style x:Key="Border.NavigationPanel" TargetType="{x:Type Border}" BasedOn="{StaticResource Border.Panel}">
-        <Setter Property="Margin" Value="0,0,0,4"/>
+    <Style x:Key="Badge.Success" TargetType="{x:Type Border}" BasedOn="{StaticResource Badge}">
+        <Setter Property="Background" Value="{StaticResource Background.Success}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Foreground.Success}"/>
     </Style>
 
-    <Style x:Key="TextBlock" TargetType="{x:Type TextBlock}">
-        <Setter Property="Foreground" Value="{StaticResource Text.Primary}"/>
-        <Setter Property="FontFamily" Value="Segoe UI"/>
-        <Setter Property="FontSize" Value="14"/>
+    <Style x:Key="Text" TargetType="{x:Type TextBlock}">
+        <Setter Property="Foreground" Value="{StaticResource Foreground.Primary}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontFamily" Value="Segoe UI Variable"/>
+        <Setter Property="FontWeight" Value="Bold"/>
     </Style>
 
-    <Style x:Key="TextBlock.Banner" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource TextBlock}">
+    <Style x:Key="Text.Secondary" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
+        <Setter Property="Foreground" Value="{StaticResource Foreground.Secondary}"/>
+    </Style>
+
+    <Style x:Key="Text.Header" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
         <Setter Property="FontSize" Value="24"/>
         <Setter Property="FontWeight" Value="Bold"/>
     </Style>
 
-    <Style x:Key="TextBlock.Hint" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource TextBlock}">
-        <Setter Property="FontSize" Value="10"/>
-        <Setter Property="Foreground" Value="{StaticResource Text.Secondary}"></Setter>
+    <Style x:Key="Text.Label" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
+        <Setter Property="Foreground" Value="{StaticResource Foreground.Secondary}"/>
     </Style>
 
-    <Style x:Key="Button" TargetType="{x:Type Button}">
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource Color.Primary}"/>
-            </Trigger>            
-        </Style.Triggers>
-        
-        <Setter Property="Height" Value="36"/>
-        <Setter Property="Padding" Value="8,0,8,0"/>
-        <Setter Property="HorizontalAlignment" Value="Stretch"/>
-        <Setter Property="HorizontalContentAlignment" Value="Left"/>
-        <Setter Property="Background" Value="{StaticResource Color.Secondary}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
-        <Setter Property="BorderThickness" Value="1"/>
+    <Style x:Key="Text.Success" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
+        <Setter Property="Foreground" Value="{StaticResource Foreground.Success}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
+    <Style x:Key="Icon" TargetType="{x:Type icon:MaterialIcon}">
+        <Setter Property="Foreground" Value="{StaticResource Foreground.Primary}"/>
+        <Setter Property="Height" Value="28"/>
+    </Style>
+
+    <Style x:Key="Icon.Logo" TargetType="{x:Type icon:MaterialIcon}" BasedOn="{StaticResource Icon}">
+    </Style>
+
+    <Style TargetType="{x:Type Button}">
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource Foreground.Secondary}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Border.Subtle}"></Setter>
+        <Setter Property="Cursor" Value="Hand"/>
+
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Button}">
@@ -76,7 +88,7 @@
                 Background="{TemplateBinding Background}"
                 BorderBrush="{TemplateBinding BorderBrush}"
                 BorderThickness="{TemplateBinding BorderThickness}"
-                CornerRadius="4"
+                CornerRadius="16"
                 Padding="{TemplateBinding Padding}">
 
                         <ContentPresenter
@@ -87,6 +99,13 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
+                <Setter Property="Background" Value="{StaticResource Background.Surface}"/>
+                <Setter Property="Foreground" Value="{StaticResource Foreground.Primary}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
-    
 </ResourceDictionary>
