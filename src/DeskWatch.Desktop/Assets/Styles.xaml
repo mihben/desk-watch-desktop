@@ -13,9 +13,21 @@
     <SolidColorBrush x:Key="Foreground.Muted" Color="#718198"/>
     <SolidColorBrush x:Key="Foreground.Disabled" Color="#46556B"/>
 
-    <SolidColorBrush x:Key="Background.Success" Color="#34D399"/>
-    <SolidColorBrush x:Key="Foreground.Success" Color="#12372F"/>
-    <SolidColorBrush x:Key="Border.Success" Color="#12372F"/>
+    <SolidColorBrush x:Key="Background.Neutral" Color="#1C2A3D"/>
+    <SolidColorBrush x:Key="Foreground.Neutral" Color="#B8C7D9"/>
+    <SolidColorBrush x:Key="Border.Neutral" Color="#34465D"/>
+
+    <SolidColorBrush x:Key="Background.Info" Color="#142E4D"/>
+    <SolidColorBrush x:Key="Foreground.Info" Color="#70B5FF"/>
+    <SolidColorBrush x:Key="Border.Info" Color="#2684FF"/>
+
+    <SolidColorBrush x:Key="Background.Danger" Color="#3D2028"/>
+    <SolidColorBrush x:Key="Foreground.Danger" Color="#FF8585"/>
+    <SolidColorBrush x:Key="Border.Danger" Color="#EF4444"/>
+
+    <SolidColorBrush x:Key="Background.Success" Color="#12372F"/>
+    <SolidColorBrush x:Key="Foreground.Success" Color="#20A982"/>
+    <SolidColorBrush x:Key="Border.Success" Color="#20D6A0"/>
 
     <Style x:Key="Panel.Main" TargetType="{x:Type Border}">
         <Setter Property="Background" Value="{StaticResource Background.Main}"/>
@@ -26,17 +38,6 @@
         <Setter Property="BorderBrush" Value="{StaticResource Border.Subtle}"></Setter>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="Padding" Value="0,16,0,16"/>
-    </Style>
-
-    <Style x:Key="Badge" TargetType="{x:Type Border}">
-        <Setter Property="CornerRadius" Value="12"/>
-        <Setter Property="Padding" Value="8,4,8,4"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
-
-    <Style x:Key="Badge.Success" TargetType="{x:Type Border}" BasedOn="{StaticResource Badge}">
-        <Setter Property="Background" Value="{StaticResource Background.Success}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource Foreground.Success}"/>
     </Style>
 
     <Style x:Key="Text" TargetType="{x:Type TextBlock}">

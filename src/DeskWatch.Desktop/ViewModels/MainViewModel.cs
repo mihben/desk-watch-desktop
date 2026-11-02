@@ -1,55 +1,71 @@
-﻿using DeskWatch.Desktop.Commands;
+﻿using DeskWatch.Desktop.Models;
+using DeskWatch.Desktop.Services;
+using DeskWatch.Desktop.Stores;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Windows.Input;
 
 namespace DeskWatch.Desktop.ViewModels
 {
-    public enum Screen
+    public enum ConnectionStatus
     {
-        Dashboard,
-        Events
+        Offline,
+        Connecting,
+        Connected,
+        Lost
     }
 
     public class MainViewModel : INotifyPropertyChanged
     {
+        public readonly DeviceService _deviceService = new DeviceService();
+
         private bool _dashboardIsSelected = true;
         public bool DashboardIsSelected { get { return _dashboardIsSelected; } set { _dashboardIsSelected = value; NotifyPropertyChanged(nameof(DashboardIsSelected)); } }
 
         private bool _eventsIsSelected = false;
         public bool EventsIsSelected { get { return _eventsIsSelected; } set { _eventsIsSelected = value; NotifyPropertyChanged(nameof(EventsIsSelected)); } }
 
-        public ICommand NavigateCommand { get; }
+        private ConnectionStatus _connectionStatus = ConnectionStatus.Offline;
+        public ConnectionStatus ConnectionStatus { get { return _connectionStatus; } set { _connectionStatus = value; NotifyPropertyChanged(nameof(ConnectionStatus)); } }
 
-        public IEnumerable<LogEntry> Events { get; }
-         = new List<LogEntry> {
-            new LogEntry { Timestamp = "15:12:03.965", Event = "connection.synchorinzed", Message = "Time is synchronized." },
-            new LogEntry { Timestamp = "15:12:02.358", Event = "connection.established", Message = "Device is connected." },
-            new LogEntry { Timestamp = "15:12:02.124", Event = "device.started", Message = "Device has been started. Waiting for connection..." }
-        };
+        public ReadOnlyObservableCollection<EventModel> Events { get; } = EventStore.Instance.Events;
 
         public event PropertyChangedEventHandler? PropertyChanged;
         public event EventHandler? CanExecuteChanged;
 
         public MainViewModel()
         {
-            NavigateCommand = new RelayCommand(parameter =>
-            {
-                var screen = (Screen)parameter!;
-                DashboardIsSelected = screen == Screen.Dashboard;
-                EventsIsSelected = screen == Screen.Events;
-            });
+            _deviceService.Connecting += OnConnecting;
+            _deviceService.ConnectingFailed += OnConnectingFailed;
+            _deviceService.DeviceResponsed += OnDeviceResponded;
+            _deviceService.Connected += OnConnected;
+        }
+
+        private void OnConnected(object? sender, string e)
+        {
+            ConnectionStatus = ConnectionStatus.Connected;
+            EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.connected", "Device connected.");
+        }
+
+        private void OnDeviceResponded(object? sender, EventModel response)
+        {
+            EventStore.Instance.AddDeviceMessageEvent(response.Timestamp, response.Level, response.Event, response.Message);
+        }
+
+        private void OnConnectingFailed(object? sender, EventArgs e)
+        {
+            ConnectionStatus = ConnectionStatus.Offline;
+            EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.connecting.failed", "Connecting failed.");
+        }
+
+        private void OnConnecting(object? sender, string port)
+        {
+            ConnectionStatus = ConnectionStatus.Connecting;
+            EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.connecting", $"Connecting to device on {port} port");
         }
 
         private void NotifyPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-    }
-
-    public record LogEntry
-    {
-        public required string Timestamp { get; init; }
-        public required string Event { get; init; }
-        public required string Message { get; init; }
     }
 }

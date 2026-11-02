@@ -4,17 +4,20 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DeskWatch.Desktop"
-        xmlns:controls="clr-namespace:DeskWatch.Desktop.Controls"
-        xmlns:Screens="clr-namespace:DeskWatch.Desktop.Screens"
         xmlns:icons="clr-namespace:Material.Icons.WPF;assembly=Material.Icons.WPF"
+        xmlns:controls="clr-namespace:DeskWatch.Desktop.Controls"
+        xmlns:converters="clr-namespace:DeskWatch.Desktop.Converters"
         mc:Ignorable="d"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing"
         Title="DeskWatch" Height="450" Width="800">
 
     <Window.Resources>
         <ResourceDictionary>
             
             <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-            
+            <converters:ConnectionStatusBadgeVariantConverter x:Key="ConnectionStatusBadgeVariantConverter"/>
+
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Assets/Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
@@ -41,9 +44,7 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <icons:MaterialIcon Kind="Monitor" Style="{StaticResource Icon.Logo}" Margin="0,0,8,0"/>
                         <TextBlock Style="{StaticResource Text.Header}" Text="DeskWatch"></TextBlock>
-                        <Border Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
-                            <TextBlock Style="{StaticResource Text.Success}" Text="Connected"></TextBlock>
-                        </Border>
+                        <controls:Badge Variant="{Binding ConnectionStatus, Converter={StaticResource ConnectionStatusBadgeVariantConverter}}" Value="{Binding ConnectionStatus}"></controls:Badge>
                     </StackPanel>
 
                     <TextBlock Grid.Column="1" Style="{StaticResource Text.Secondary}" Text="v1.0.0"></TextBlock>
@@ -67,9 +68,9 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0" Text="ONLINE" Style="{StaticResource Text}"/>
-                        <Border Grid.Column="1" Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
+                        <!--<Border Grid.Column="1" Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
                             <TextBlock Style="{StaticResource Text.Success}" Text="READY"></TextBlock>
-                        </Border>
+                        </Border>-->
                     </Grid>
 
                     <UniformGrid Grid.Row="2" Margin="4,8,0,0" Columns="3">
@@ -140,9 +141,9 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0" Text="Synchronization" Style="{StaticResource Text.Label}"></TextBlock>
-                        <Border Grid.Column="1" Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
+                        <!--<Border Grid.Column="1" Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
                             <TextBlock Style="{StaticResource Text.Success}" Text="SYNCED"></TextBlock>
-                        </Border>
+                        </Border-->
                     </Grid>
                 </Grid>
             </Border>
@@ -201,24 +202,54 @@
 
                     <TextBlock Grid.Row="0" Text="Event Log" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
 
-                    <ListView Grid.Row="1" Background="Transparent" BorderThickness="0" Grid.IsSharedSizeScope="True" ItemsSource="{Binding Events}" SelectionMode="Extended">
+                    <ListView Grid.Row="1" Background="Transparent" BorderThickness="0" Grid.IsSharedSizeScope="True" ItemsSource="{Binding Events}" SelectionMode="Single">
                         <ListView.ItemTemplate>
                             <DataTemplate>
                                 <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto"/>
                                         <ColumnDefinition Width="auto" SharedSizeGroup="timespan"/>
+                                        <ColumnDefinition Width="auto" SharedSizeGroup="source"/>
                                         <ColumnDefinition Width="auto" SharedSizeGroup="event"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <Border Grid.Column="0" Width="12" Height="12" BorderBrush="{StaticResource Background.Success}" BorderThickness="2" CornerRadius="25" Padding="1">
-                                        <Border Background="{StaticResource Background.Success}" CornerRadius="25"></Border>
+                                    <Border Grid.Column="0" Width="12" Height="12" BorderThickness="2" CornerRadius="25" Padding="1">
+                                        <Border.Style>
+                                            <Style TargetType="{x:Type Border}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Level}" Value="INF">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Foreground.Success}"/>
+                                                    </DataTrigger>
+                                                    
+                                                    <DataTrigger Binding="{Binding Level}" Value="ERR">
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Foreground.Danger}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        
+                                        <Border CornerRadius="25">
+                                            <Border.Style>
+                                                <Style TargetType="{x:Type Border}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Level}" Value="INF">
+                                                            <Setter Property="Background" Value="{StaticResource Foreground.Success}"/>
+                                                        </DataTrigger>
+                                                        
+                                                        <DataTrigger Binding="{Binding Level}" Value="ERR">
+                                                            <Setter Property="Background" Value="{StaticResource Foreground.Danger}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                        </Border>
                                     </Border>
 
-                                    <TextBlock Margin="16,0,0,0" Grid.Column="1" Text="{Binding Timestamp}" VerticalAlignment="Center" Style="{StaticResource Text.Secondary}"/>
-                                    <TextBlock Margin="16,0,0,0" Grid.Column="2" Text="{Binding Event}" VerticalAlignment="Center" Style="{StaticResource Text}"/>
-                                    <TextBlock Margin="16,0,0,0" Grid.Column="3" Text="{Binding Message}" VerticalAlignment="Center" Style="{StaticResource Text}"/>
+                                    <TextBlock Margin="8,0,0,0" Grid.Column="1" Text="{Binding Timestamp}" VerticalAlignment="Center" Style="{StaticResource Text.Secondary}"/>
+                                    <TextBlock Margin="16,0,0,0" Grid.Column="2" Text="{Binding Source}" VerticalAlignment="Center" Style="{StaticResource Text}"/>
+                                    <TextBlock Margin="16,0,0,0" Grid.Column="3" Text="{Binding Event}" VerticalAlignment="Center" Style="{StaticResource Text}"/>
+                                    <TextBlock Margin="16,0,0,0" Grid.Column="4" Text="{Binding Message}" VerticalAlignment="Center" Style="{StaticResource Text}"/>
                                 </Grid>
                             </DataTemplate>                            
                         </ListView.ItemTemplate>
