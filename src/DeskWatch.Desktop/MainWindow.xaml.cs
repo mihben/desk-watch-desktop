@@ -15,14 +15,14 @@ namespace DeskWatch.Desktop
             DataContext = new MainViewModel();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            ((MainViewModel)DataContext)._deviceService.ConnectAsync();
+            await ((MainViewModel)DataContext)._deviceService.ConnectAsync();
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            ((MainViewModel)DataContext)._deviceService.Close();
+            await ((MainViewModel)DataContext)._deviceService.CloseAsync();
         }
     }
 }

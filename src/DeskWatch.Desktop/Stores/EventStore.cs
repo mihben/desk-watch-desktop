@@ -1,5 +1,6 @@
 ﻿using DeskWatch.Desktop.Models;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace DeskWatch.Desktop.Stores
 {
@@ -12,7 +13,8 @@ namespace DeskWatch.Desktop.Stores
 
         public void AddEvent(ulong timestamp, string level, Source source, string @event, string message)
         {
-            _events.Insert(0, new EventModel { Timestamp = timestamp, Level = level, Source = source, Event = @event, Message = message });
+            Application.Current.Dispatcher.Invoke(() =>
+            _events.Insert(0, new EventModel { Timestamp = timestamp, Level = level, Source = source, Event = @event, Message = message }));
         }
 
         public void AddApplicationMessageEvent(ulong timestamp, string level, string @event, string message)

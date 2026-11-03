@@ -17,6 +17,7 @@
             
             <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
             <converters:ConnectionStatusBadgeVariantConverter x:Key="ConnectionStatusBadgeVariantConverter"/>
+            <converters:ConnectionStatusDeviceStatusConverter x:Key="ConnectionStatusDeviceStatusConverter"/>
 
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Assets/Styles.xaml"/>
@@ -67,7 +68,7 @@
                             <ColumnDefinition Width="auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" Text="ONLINE" Style="{StaticResource Text}"/>
+                        <TextBlock Grid.Column="0" Text="{Binding ConnectionStatus, Converter={StaticResource ConnectionStatusDeviceStatusConverter}}" Style="{StaticResource Text}"/>
                         <!--<Border Grid.Column="1" Style="{StaticResource Badge.Success}" Margin="4,0,0,0">
                             <TextBlock Style="{StaticResource Text.Success}" Text="READY"></TextBlock>
                         </Border>-->
@@ -76,12 +77,12 @@
                     <UniformGrid Grid.Row="2" Margin="4,8,0,0" Columns="3">
                         <StackPanel>
                             <TextBlock Grid.Column="0" Text="Serial Port" Style="{StaticResource Text.Label}"/>
-                            <TextBlock Grid.Column="0" Text="COM3" Style="{StaticResource Text}"/>
+                            <TextBlock Grid.Column="0" Text="{Binding Port}" Style="{StaticResource Text}"/>
                         </StackPanel>
 
                         <StackPanel>
                             <TextBlock Grid.Column="0" Text="Last Update" Style="{StaticResource Text.Label}"/>
-                            <TextBlock Grid.Column="0" Text="09:20:04" Style="{StaticResource Text}"/>
+                            <TextBlock Grid.Column="0" Text="{Binding LastUpdated, StringFormat={}{0:HH:mm:ss.fff}}" Style="{StaticResource Text}"/>
                         </StackPanel>
 
                         <StackPanel>
@@ -157,13 +158,13 @@
 
                     <UniformGrid Grid.Row="0" Columns="2" Rows="2" Margin="0,0,0,4">
 
-                        <Button Margin="0,0,4,4">
+                        <Button Margin="0,0,4,4" Command="{Binding ConnectCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <icons:MaterialIcon Kind="LanConnect" Margin="0,0,4,0" Height="16"/>
                                 <TextBlock Text="Connect"></TextBlock>
                             </StackPanel>
                         </Button>
-                        <Button Margin="0,0,4,4">
+                        <Button Margin="0,0,4,4" Command="{Binding DisconnectCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <icons:MaterialIcon Kind="LanDisconnect" Margin="0,0,4,0" Height="16"/>
                                 <TextBlock Text="Disconnect"></TextBlock>
@@ -184,7 +185,7 @@
                         </Button>
                     </UniformGrid>
 
-                    <Button Margin="0,0,4,4"  Grid.Row="1">
+                    <Button Margin="0,0,4,4"  Grid.Row="1" Command="{Binding SynchronizeCommand}">
                         <StackPanel Orientation="Horizontal">
                             <icons:MaterialIcon Kind="Sync" Margin="0,0,4,0" Height="16"/>
                             <TextBlock Text="Synchronize"></TextBlock>

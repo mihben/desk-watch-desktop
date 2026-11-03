@@ -1,8 +1,11 @@
-﻿using DeskWatch.Desktop.Models;
+﻿using DeskWatch.Desktop.Commands;
+using DeskWatch.Desktop.Models;
 using DeskWatch.Desktop.Services;
 using DeskWatch.Desktop.Stores;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
+using System.Windows.Input;
 
 namespace DeskWatch.Desktop.ViewModels
 {
@@ -27,40 +30,40 @@ namespace DeskWatch.Desktop.ViewModels
         private ConnectionStatus _connectionStatus = ConnectionStatus.Offline;
         public ConnectionStatus ConnectionStatus { get { return _connectionStatus; } set { _connectionStatus = value; NotifyPropertyChanged(nameof(ConnectionStatus)); } }
 
+        public string? _port;
+        public string? Port { get { return _port; } set { _port = value; NotifyPropertyChanged(nameof(Port)); } }
+
+        public DateTime? _lastUpdate;
+        public DateTime? LastUpdated { get { return _lastUpdate; } set { _lastUpdate = value; NotifyPropertyChanged(nameof(LastUpdated)); } }
+
+        public ICommand ConnectCommand { get; }
+        public ICommand DisconnectCommand { get; }
+        public ICommand SynchronizeCommand { get; }
+
         public ReadOnlyObservableCollection<EventModel> Events { get; } = EventStore.Instance.Events;
 
         public event PropertyChangedEventHandler? PropertyChanged;
-        public event EventHandler? CanExecuteChanged;
 
         public MainViewModel()
         {
-            _deviceService.Connecting += OnConnecting;
-            _deviceService.ConnectingFailed += OnConnectingFailed;
-            _deviceService.DeviceResponsed += OnDeviceResponded;
-            _deviceService.Connected += OnConnected;
+            _deviceService.ConnectionStatusChanged += OnConnectionStatusChanged;
+            _deviceService.Synchronized += OnSynchronized;
+
+            ConnectCommand = new RelayCommand(async (_) => await _deviceService.ConnectAsync(), (_) => ConnectionStatus == ConnectionStatus.Offline);
+            DisconnectCommand = new RelayCommand(async (_) => await _deviceService.DisconnectAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
+            SynchronizeCommand = new RelayCommand(async (_) => await _deviceService.SynchronizeAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
         }
 
-        private void OnConnected(object? sender, string e)
+        private void OnSynchronized(object? sender, EventArgs e)
         {
-            ConnectionStatus = ConnectionStatus.Connected;
-            EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.connected", "Device connected.");
+            Application.Current.Dispatcher.Invoke(() => LastUpdated = DateTime.Now);
         }
 
-        private void OnDeviceResponded(object? sender, EventModel response)
+        private void OnConnectionStatusChanged(object? sender, ConnectionStatus status)
         {
-            EventStore.Instance.AddDeviceMessageEvent(response.Timestamp, response.Level, response.Event, response.Message);
-        }
-
-        private void OnConnectingFailed(object? sender, EventArgs e)
-        {
-            ConnectionStatus = ConnectionStatus.Offline;
-            EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.connecting.failed", "Connecting failed.");
-        }
-
-        private void OnConnecting(object? sender, string port)
-        {
-            ConnectionStatus = ConnectionStatus.Connecting;
-            EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.connecting", $"Connecting to device on {port} port");
+            Port = _deviceService.Port;
+            ConnectionStatus = status;
+            LastUpdated = DateTime.Now;
         }
 
         private void NotifyPropertyChanged(string propertyName)
