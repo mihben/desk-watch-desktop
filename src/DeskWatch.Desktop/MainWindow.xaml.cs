@@ -35,7 +35,7 @@ namespace DeskWatch.Desktop
             if (e.PropertyName == nameof(MainViewModel.Status)) _trayIcon.Update(_viewModel.Status);
         }
 
-        private void Open()
+        public void Open()
         {
             Show();
             if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
