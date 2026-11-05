@@ -19,7 +19,7 @@ namespace DeskWatch.Desktop
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            await ((MainViewModel)DataContext)._deviceService.ConnectAsync();
+            await ((MainViewModel)DataContext)._deviceService.StartAsync();
         }
 
         private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)

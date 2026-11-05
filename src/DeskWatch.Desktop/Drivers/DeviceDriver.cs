@@ -72,11 +72,10 @@ namespace DeskWatch.Desktop.Drivers
 
         private void OpenPort(string port)
         {
-            if (_serial is not null)
-            {
-                _serial.Close();
-                _serial = null;
-            }
+            // Closing a port of an unplugged device can fail, but that must not block the next attempt.
+            var previous = _serial;
+            _serial = null;
+            previous?.Close();
 
             _serial = new SerialPort(port, 9600);
 
