@@ -176,7 +176,7 @@
                                 <TextBlock Text="Sleep"></TextBlock>
                             </StackPanel>
                         </Button>
-                        <Button Margin="0,0,4,4">
+                        <Button Margin="0,0,4,4" Command="{Binding WakeUpCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <icons:MaterialIcon Kind="WeatherSunny" Margin="0,0,4,0" Height="16"/>
                                 <TextBlock Text="Wake Up"></TextBlock>

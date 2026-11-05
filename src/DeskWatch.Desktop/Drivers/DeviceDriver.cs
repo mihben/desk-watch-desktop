@@ -23,6 +23,7 @@ namespace DeskWatch.Desktop.Drivers
             public const string CONNECT = "CONNECT";
             public const string DISCONNECT = "DISCONNECT";
             public const string SLEEP = "SLEEP";
+            public const string WAKEUP = "WAKEUP";
             public const string SET = "SET";
         }
 
@@ -36,6 +37,8 @@ namespace DeskWatch.Desktop.Drivers
             public const string DISCONNECTION_REJECTED = "disconnection.command.rejected";
             public const string DEVICE_ASLEEP = "device.asleep";
             public const string SLEEP_REJECTED = "sleep.command.rejected";
+            public const string DEVICE_WOKEUP = "device.wokeup";
+            public const string WAKEUP_REJECTED = "wakeup.command.rejected";
             public const string TIME_SYNCHRONIZED = "time.synchronized";
             public const string SET_REJECTED = "set.command.rejected";
         }
@@ -54,6 +57,21 @@ namespace DeskWatch.Desktop.Drivers
 
         public async Task ConnectAsync(string port)
         {
+            OpenPort(port);
+
+            SendCommand(Commands.CONNECT, Events.CONNECTION_ESTABLISHED, Events.CONNECTION_REJECTED);
+            Connected?.Invoke(this, port);
+        }
+
+        public async Task WakeUpAsync(string port)
+        {
+            OpenPort(port);
+
+            SendCommand(Commands.WAKEUP, Events.DEVICE_WOKEUP, Events.WAKEUP_REJECTED);
+        }
+
+        private void OpenPort(string port)
+        {
             if (_serial is not null)
             {
                 _serial.Close();
@@ -64,9 +82,6 @@ namespace DeskWatch.Desktop.Drivers
 
             _serial.Open();
             _serial.ReadTimeout = 3000;
-
-            SendCommand(Commands.CONNECT, Events.CONNECTION_ESTABLISHED, Events.CONNECTION_REJECTED);
-            Connected?.Invoke(this, port);
         }
 
         public async Task DisconnectAsync()
@@ -120,6 +135,7 @@ namespace DeskWatch.Desktop.Drivers
                 case Events.DEVICE_STARTED:
                 case Events.CONNECTION_CLOSED:
                 case Events.CONNECTION_LOST:
+                case Events.DEVICE_WOKEUP:
                     DeviceStatusChanged?.Invoke(this, DeviceStatus.Offline);
                     break;
                 case Events.CONNECTION_ESTABLISHED:

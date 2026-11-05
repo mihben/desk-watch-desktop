@@ -183,6 +183,27 @@ namespace DeskWatch.Desktop.Services
             }
         }
 
+        // A device that was already sleeping when the application started is on an unknown port.
+        public async Task WakeUpAsync()
+        {
+            foreach (var port in SerialPort.GetPortNames())
+            {
+                try
+                {
+                    await RunOnDriverAsync(() => _driver.WakeUpAsync(port));
+
+                    Port = port;
+                    EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.wokeup", $"Device woke up on {port} port.");
+                    Status = ConnectionStatus.Offline;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.wakeup.failed", $"Waking up failed on {port} port. {ex.Message}");
+                }
+            }
+        }
+
         public async Task SynchronizeAsync()
         {
             try
