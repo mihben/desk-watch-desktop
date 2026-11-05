@@ -8,7 +8,7 @@
         xmlns:converters="clr-namespace:DeskWatch.Desktop.Converters"
         mc:Ignorable="d"
         Closing="Window_Closing"
-        Title="DeskWatch" Width="440" Height="600" MinWidth="380" MinHeight="420">
+        Title="DeskWatch" Icon="/Assets/DeskWatch.ico" Width="440" Height="600" MinWidth="380" MinHeight="420">
 
     <Window.Resources>
         <ResourceDictionary>
