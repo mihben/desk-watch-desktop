@@ -6,6 +6,8 @@ namespace DeskWatch.Desktop.Stores
 {
     public class EventStore
     {
+        private const int MaxEventCount = 1000;
+
         public static EventStore Instance { get; } = new EventStore();
 
         private readonly ObservableCollection<EventModel> _events = [];
@@ -14,7 +16,11 @@ namespace DeskWatch.Desktop.Stores
         public void AddEvent(ulong timestamp, string level, Source source, string @event, string message)
         {
             Application.Current.Dispatcher.Invoke(() =>
-            _events.Insert(0, new EventModel { Timestamp = timestamp, Level = level, Source = source, Event = @event, Message = message }));
+            {
+                _events.Insert(0, new EventModel { Timestamp = timestamp, Level = level, Source = source, Event = @event, Message = message });
+
+                if (_events.Count > MaxEventCount) _events.RemoveAt(_events.Count - 1);
+            });
         }
 
         public void AddApplicationMessageEvent(ulong timestamp, string level, string @event, string message)
