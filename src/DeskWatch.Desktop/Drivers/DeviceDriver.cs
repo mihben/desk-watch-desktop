@@ -17,9 +17,25 @@ namespace DeskWatch.Desktop.Drivers
             PropertyNameCaseInsensitive = true
         };
 
-        private const string CONNECT = "CONNECT";
-        private const string DISCONNECT = "DISCONNECT";
-        private const string SET = "SET";
+        private static class Commands
+        {
+            public const string CONNECT = "CONNECT";
+            public const string DISCONNECT = "DISCONNECT";
+            public const string SET = "SET";
+        }
+
+        private static class Events
+        {
+            public const string DEVICE_STARTED = "device.started";
+            public const string CONNECTION_ESTABLISHED = "connection.established";
+            public const string CONNECTION_REJECTED = "connection.command.rejected";
+            public const string CONNECTION_CLOSED = "connection.closed";
+            public const string DISCONNECTION_REJECTED = "disconnection.command.rejected";
+            public const string TIME_SYNCHRONIZED = "time.synchronized";
+            public const string SET_REJECTED = "set.command.rejected";
+        }
+
+        private const int MAX_RESPONSE_LINES = 10;
 
         private SerialPort? _serial;
 
@@ -43,29 +59,44 @@ namespace DeskWatch.Desktop.Drivers
             _serial.Open();
             _serial.ReadTimeout = 3000;
 
-            _serial.WriteLine(CONNECT);
-
-            var response = JsonSerializer.Deserialize<DeviceEvent>(_serial.ReadLine(), _jsonSerializerOptions);
-            EventReceived?.Invoke(this, response);
+            SendCommand(Commands.CONNECT, Events.CONNECTION_ESTABLISHED, Events.CONNECTION_REJECTED);
             Connected?.Invoke(this, port);
         }
 
         public async Task DisconnectAsync()
         {
-            _serial.WriteLine(DISCONNECT);
-
-            var response = JsonSerializer.Deserialize<DeviceEvent>(_serial.ReadLine(), _jsonSerializerOptions);
-            EventReceived?.Invoke(this, response);
+            SendCommand(Commands.DISCONNECT, Events.CONNECTION_CLOSED, Events.DISCONNECTION_REJECTED);
             Disconnected?.Invoke(this, EventArgs.Empty);
         }
 
         public async Task SynchronizeAsync(string time)
         {
-            _serial.WriteLine($"{SET} {time}");
-
-            var response = JsonSerializer.Deserialize<DeviceEvent>(_serial.ReadLine(), _jsonSerializerOptions);
-            EventReceived?.Invoke(this, response);
+            SendCommand($"{Commands.SET} {time}", Events.TIME_SYNCHRONIZED, Events.SET_REJECTED);
             Synchronized?.Invoke(this, EventArgs.Empty);
+        }
+
+        // The device also logs on its own, so a response is recognized by its event and not by its position.
+        private void SendCommand(string command, string successEvent, string rejectedEvent)
+        {
+            var serial = _serial ?? throw new InvalidOperationException("The serial port is not open.");
+
+            serial.WriteLine(command);
+
+            for (var i = 0; i < MAX_RESPONSE_LINES; i++)
+            {
+                var response = JsonSerializer.Deserialize<DeviceEvent>(serial.ReadLine(), _jsonSerializerOptions)
+                    ?? throw new JsonException("The device sent an empty response.");
+
+                EventReceived?.Invoke(this, response);
+
+                if (response.Event == successEvent) return;
+                if (response.Event == rejectedEvent) throw new DeviceCommandRejectedException(response.Message);
+
+                // A command sent while the device was restarting is lost.
+                if (response.Event == Events.DEVICE_STARTED) serial.WriteLine(command);
+            }
+
+            throw new TimeoutException($"No response to the {command} command.");
         }
 
         public Task CloseAsync()

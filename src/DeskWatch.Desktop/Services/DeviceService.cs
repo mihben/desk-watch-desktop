@@ -21,6 +21,7 @@ namespace DeskWatch.Desktop.Services
 
         public event EventHandler<ConnectionStatus>? ConnectionStatusChanged;
         public event EventHandler? Synchronized;
+        public event EventHandler? SynchronizeFailed;
 
         public DeviceService()
         {
@@ -100,30 +101,20 @@ namespace DeskWatch.Desktop.Services
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
             try
             {
-                while (await timer.WaitForNextTickAsync(cancellationToken))
+                while (await timer.WaitForNextTickAsync(cancellationToken) && Status == ConnectionStatus.Connected)
                 {
-                    try
-                    {
-                        await SynchronizeAsync();
-                    }
-                    catch (Exception ex) when (ex is TimeoutException or JsonException)
-                    {
-                        EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.synchronization.failed", $"Synchronization failed. {ex.Message}");
-                    }
+                    await SynchronizeAsync();
                 }
             }
             catch (OperationCanceledException)
             {
             }
-            catch (Exception ex)
-            {
-                EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.connection.lost", $"Connection is lost. {ex.Message}");
-                Application.Current.Dispatcher.Invoke(() => Status = ConnectionStatus.Lost);
-            }
         }
 
         public async Task ConnectAsync()
         {
+            await StopPeriodicSynchronizationAsync();
+
             foreach (var port in SerialPort.GetPortNames())
             {
                 Status = ConnectionStatus.Connecting;
@@ -151,6 +142,11 @@ namespace DeskWatch.Desktop.Services
             {
                 await RunOnDriverAsync(_driver.DisconnectAsync);
             }
+            catch (DeviceCommandRejectedException ex)
+            {
+                EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.disconnection.rejected", $"The device rejected disconnecting. {ex.Message}");
+                Status = ConnectionStatus.Offline;
+            }
             catch (Exception ex)
             {
                 EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.disconnection.failed", $"Disconnecting failed. {ex.Message}");
@@ -160,12 +156,27 @@ namespace DeskWatch.Desktop.Services
 
         public async Task SynchronizeAsync()
         {
-            await RunOnDriverAsync(() =>
+            try
             {
-                var time = DateTime.Now;
-                if (time.Second % 2 == 0) return _driver.SynchronizeAsync($"{time:HH:mm}");
-                return _driver.SynchronizeAsync($"{time:HH mm}");
-            });
+                await RunOnDriverAsync(() =>
+                {
+                    var time = DateTime.Now;
+                    if (time.Second % 2 == 0) return _driver.SynchronizeAsync($"{time:HH:mm}");
+                    return _driver.SynchronizeAsync($"{time:HH mm}");
+                });
+            }
+            catch (Exception ex) when (ex is TimeoutException or JsonException)
+            {
+                EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.synchronization.failed", $"Synchronization failed. {ex.Message}");
+                SynchronizeFailed?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // A rejected SET means the device is not connected anymore, for example after a timeout or a restart.
+                EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.connection.lost", $"Connection is lost. {ex.Message}");
+                SynchronizeFailed?.Invoke(this, EventArgs.Empty);
+                Application.Current.Dispatcher.Invoke(() => Status = ConnectionStatus.Lost);
+            }
         }
 
         public async Task CloseAsync()

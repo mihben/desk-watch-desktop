@@ -49,7 +49,7 @@ namespace DeskWatch.Desktop.ViewModels
             _deviceService.ConnectionStatusChanged += OnConnectionStatusChanged;
             _deviceService.Synchronized += OnSynchronized;
 
-            ConnectCommand = new RelayCommand(async (_) => await _deviceService.ConnectAsync(), (_) => ConnectionStatus == ConnectionStatus.Offline);
+            ConnectCommand = new RelayCommand(async (_) => await _deviceService.ConnectAsync(), (_) => ConnectionStatus is ConnectionStatus.Offline or ConnectionStatus.Lost);
             DisconnectCommand = new RelayCommand(async (_) => await _deviceService.DisconnectAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
             SynchronizeCommand = new RelayCommand(async (_) => await _deviceService.SynchronizeAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
         }
