@@ -94,6 +94,16 @@ namespace DeskWatch.Desktop.ViewModels
             }
         }
 
+        public bool StartWithWindows
+        {
+            get { return AutoStart.IsEnabled; }
+            set
+            {
+                AutoStart.IsEnabled = value;
+                NotifyPropertyChanged(nameof(StartWithWindows));
+            }
+        }
+
         public ICollectionView Events { get; }
 
         public ICommand ToggleConnectionCommand { get; }

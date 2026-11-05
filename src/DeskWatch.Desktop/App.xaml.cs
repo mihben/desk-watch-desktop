@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using DeskWatch.Desktop.Services;
+using System.Windows;
 
 namespace DeskWatch.Desktop
 {
@@ -28,7 +29,8 @@ namespace DeskWatch.Desktop
             }
 
             var window = new MainWindow();
-            window.Show();
+            if (!e.Args.Contains(AutoStart.HIDDEN_ARGUMENT)) window.Show();
+            window.Start();
 
             ThreadPool.RegisterWaitForSingleObject(openEvent, (_, _) => Dispatcher.BeginInvoke(window.Open), null, Timeout.Infinite, false);
         }

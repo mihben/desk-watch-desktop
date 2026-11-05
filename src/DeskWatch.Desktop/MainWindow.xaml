@@ -7,7 +7,6 @@
         xmlns:controls="clr-namespace:DeskWatch.Desktop.Controls"
         xmlns:converters="clr-namespace:DeskWatch.Desktop.Converters"
         mc:Ignorable="d"
-        Loaded="Window_Loaded"
         Closing="Window_Closing"
         Title="DeskWatch" Width="440" Height="600" MinWidth="380" MinHeight="420">
 
@@ -24,6 +23,7 @@
     <Border Style="{StaticResource Panel.Main}">
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -114,7 +114,9 @@
                 </Button>
             </UniformGrid>
 
-            <Grid Grid.Row="4" Margin="0,20,0,0">
+            <CheckBox Grid.Row="4" IsChecked="{Binding StartWithWindows}" Content="Start with Windows" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+
+            <Grid Grid.Row="5" Margin="0,20,0,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>

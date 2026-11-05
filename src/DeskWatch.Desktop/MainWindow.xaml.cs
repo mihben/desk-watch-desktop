@@ -48,7 +48,8 @@ namespace DeskWatch.Desktop
             Close();
         }
 
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        // Not tied to the Loaded event, because the window stays hidden when it starts with Windows.
+        public async void Start()
         {
             await _viewModel._deviceService.StartAsync();
         }
