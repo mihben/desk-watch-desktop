@@ -2,6 +2,7 @@
 using DeskWatch.Desktop.Stores;
 using DeskWatch.Desktop.ViewModels;
 using System.IO.Ports;
+using System.Text.Json;
 using System.Windows;
 
 namespace DeskWatch.Desktop.Services
@@ -9,8 +10,8 @@ namespace DeskWatch.Desktop.Services
     public class DeviceService
     {
         private readonly DeviceDriver _driver = new();
-        private readonly PeriodicTimer _timer;
-        private Task _timerTask;
+        private CancellationTokenSource? _synchronizationCancellation;
+        private Task? _synchronizationTask;
 
         private ConnectionStatus _status = ConnectionStatus.Offline;
         public ConnectionStatus Status { get { return _status; } set { _status = value; ConnectionStatusChanged?.Invoke(this, value); } }
@@ -52,16 +53,54 @@ namespace DeskWatch.Desktop.Services
             Status = ConnectionStatus.Connected;
             EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.connected", $"Device is connected on {port} port.");
 
-            _timerTask = Task.Run(PeriodicSynchronizeAsync);
+            StartPeriodicSynchronization();
         }
 
-        public async Task PeriodicSynchronizeAsync()
+        private void StartPeriodicSynchronization()
+        {
+            if (_synchronizationCancellation is not null) return;
+
+            _synchronizationCancellation = new CancellationTokenSource();
+            var cancellationToken = _synchronizationCancellation.Token;
+            _synchronizationTask = Task.Run(() => PeriodicSynchronizeAsync(cancellationToken));
+        }
+
+        private async Task StopPeriodicSynchronizationAsync()
+        {
+            if (_synchronizationCancellation is null) return;
+
+            _synchronizationCancellation.Cancel();
+            await _synchronizationTask!;
+
+            _synchronizationCancellation.Dispose();
+            _synchronizationCancellation = null;
+            _synchronizationTask = null;
+        }
+
+        private async Task PeriodicSynchronizeAsync(CancellationToken cancellationToken)
         {
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(500));
-            while (true)
+            try
             {
-                await timer.WaitForNextTickAsync();
-                await SynchronizeAsync();
+                while (await timer.WaitForNextTickAsync(cancellationToken))
+                {
+                    try
+                    {
+                        await SynchronizeAsync();
+                    }
+                    catch (Exception ex) when (ex is TimeoutException or JsonException)
+                    {
+                        EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.synchronization.failed", $"Synchronization failed. {ex.Message}");
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.connection.lost", $"Connection is lost. {ex.Message}");
+                Application.Current.Dispatcher.Invoke(() => Status = ConnectionStatus.Lost);
             }
         }
 
@@ -85,7 +124,17 @@ namespace DeskWatch.Desktop.Services
 
         public async Task DisconnectAsync()
         {
-            await _driver.DisconnectAsync();
+            await StopPeriodicSynchronizationAsync();
+
+            try
+            {
+                await _driver.DisconnectAsync();
+            }
+            catch (Exception ex)
+            {
+                EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.disconnection.failed", $"Disconnecting failed. {ex.Message}");
+                Status = ConnectionStatus.Lost;
+            }
         }
 
         public async Task SynchronizeAsync()
@@ -97,7 +146,9 @@ namespace DeskWatch.Desktop.Services
 
         public async Task CloseAsync()
         {
-            await _driver.DisconnectAsync();
+            if (Status == ConnectionStatus.Connected) await DisconnectAsync();
+            else await StopPeriodicSynchronizationAsync();
+
             await _driver.CloseAsync();
         }
     }
