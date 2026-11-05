@@ -132,12 +132,15 @@ namespace DeskWatch.Desktop.Services
                 try
                 {
                     await RunOnDriverAsync(() => _driver.ConnectAsync(port));
+                    return;
                 }
                 catch (Exception ex)
                 {
                     EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.connection.failed", $"Connecting was failed on {port} port. {ex.Message}");
                 }
             }
+
+            Status = ConnectionStatus.Offline;
         }
 
         public async Task DisconnectAsync()
