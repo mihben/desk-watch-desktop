@@ -3,9 +3,10 @@ using DeskWatch.Desktop.Drivers;
 using DeskWatch.Desktop.Models;
 using DeskWatch.Desktop.Services;
 using DeskWatch.Desktop.Stores;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace DeskWatch.Desktop.ViewModels
@@ -18,48 +19,85 @@ namespace DeskWatch.Desktop.ViewModels
         Lost
     }
 
-    public enum SynchronizationStatus
+    public enum OverallStatus
     {
-        Idle,
-        Synced,
-        Failed
+        Offline,
+        Connecting,
+        Connected,
+        Sleeping,
+        Lost
     }
 
     public class MainViewModel : INotifyPropertyChanged
     {
+        private const string DEVICE_SYNCHRONIZED_EVENT = "time.synchronized";
+        private const string APPLICATION_SYNCHRONIZED_EVENT = "application.synchronized";
+
+        private const string DISPLAY_READY = "READY";
+        private const string DISPLAY_OFFLINE = "OFFLN";
+        private const string DISPLAY_UNKNOWN = "--:--";
+
         public readonly DeviceService _deviceService = new DeviceService();
 
-        private bool _dashboardIsSelected = true;
-        public bool DashboardIsSelected { get { return _dashboardIsSelected; } set { _dashboardIsSelected = value; NotifyPropertyChanged(nameof(DashboardIsSelected)); } }
+        private string? _port;
+        private DateTime? _lastUpdated;
+        private string? _displayedTime;
+        private bool _synchronizationFailed;
+        private bool _showSynchronizationEvents;
 
-        private bool _eventsIsSelected = false;
-        public bool EventsIsSelected { get { return _eventsIsSelected; } set { _eventsIsSelected = value; NotifyPropertyChanged(nameof(EventsIsSelected)); } }
+        public string Version { get; } = $"v{Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3)}";
 
-        private ConnectionStatus _connectionStatus = ConnectionStatus.Offline;
-        public ConnectionStatus ConnectionStatus { get { return _connectionStatus; } set { _connectionStatus = value; NotifyPropertyChanged(nameof(ConnectionStatus)); } }
+        public ConnectionStatus ConnectionStatus { get; private set; } = ConnectionStatus.Offline;
+        public DeviceStatus DeviceStatus { get; private set; } = DeviceStatus.Unknown;
 
-        public string? _port;
-        public string? Port { get { return _port; } set { _port = value; NotifyPropertyChanged(nameof(Port)); } }
+        public OverallStatus Status => DeviceStatus == DeviceStatus.Sleeping
+            ? OverallStatus.Sleeping
+            : ConnectionStatus switch
+            {
+                ConnectionStatus.Connecting => OverallStatus.Connecting,
+                ConnectionStatus.Connected => OverallStatus.Connected,
+                ConnectionStatus.Lost => OverallStatus.Lost,
+                _ => OverallStatus.Offline
+            };
 
-        public DateTime? _lastUpdate;
-        public DateTime? LastUpdated { get { return _lastUpdate; } set { _lastUpdate = value; NotifyPropertyChanged(nameof(LastUpdated)); } }
+        public string StatusDetail => Status switch
+        {
+            OverallStatus.Connecting => "Looking for the device",
+            OverallStatus.Connected when _synchronizationFailed => "Last synchronization failed",
+            OverallStatus.Connected => $"{_port} · updated {_lastUpdated:HH:mm:ss}",
+            OverallStatus.Sleeping => $"{_port} · display is off",
+            OverallStatus.Lost => "Connection lost",
+            _ when DeviceStatus == DeviceStatus.Unknown => "Device not found or sleeping",
+            _ => $"{_port} · not connected"
+        };
 
-        private DateTime? _clockTime;
-        public DateTime? ClockTime { get { return _clockTime; } set { _clockTime = value; NotifyPropertyChanged(nameof(ClockTime)); } }
+        // What the device shows, as far as the application knows.
+        public string DisplayText => DeviceStatus switch
+        {
+            DeviceStatus.Connected => _displayedTime ?? DISPLAY_READY,
+            DeviceStatus.Offline => DISPLAY_OFFLINE,
+            DeviceStatus.Sleeping => string.Empty,
+            _ => DISPLAY_UNKNOWN
+        };
 
-        private DeviceStatus _deviceStatus = DeviceStatus.Unknown;
-        public DeviceStatus DeviceStatus { get { return _deviceStatus; } set { _deviceStatus = value; NotifyPropertyChanged(nameof(DeviceStatus)); } }
+        // A device that does not answer may be sleeping, and then only waking it up helps.
+        public bool CanWakeUp => ConnectionStatus == ConnectionStatus.Offline && DeviceStatus is DeviceStatus.Sleeping or DeviceStatus.Unknown;
 
-        private SynchronizationStatus _synchronizationStatus = SynchronizationStatus.Idle;
-        public SynchronizationStatus SynchronizationStatus { get { return _synchronizationStatus; } set { _synchronizationStatus = value; NotifyPropertyChanged(nameof(SynchronizationStatus)); } }
+        public bool ShowSynchronizationEvents
+        {
+            get { return _showSynchronizationEvents; }
+            set
+            {
+                _showSynchronizationEvents = value;
+                NotifyPropertyChanged(nameof(ShowSynchronizationEvents));
+                Events.Refresh();
+            }
+        }
 
-        public ICommand ConnectCommand { get; }
-        public ICommand DisconnectCommand { get; }
-        public ICommand SleepCommand { get; }
-        public ICommand WakeUpCommand { get; }
-        public ICommand SynchronizeCommand { get; }
+        public ICollectionView Events { get; }
 
-        public ReadOnlyObservableCollection<EventModel> Events { get; } = EventStore.Instance.Events;
+        public ICommand ToggleConnectionCommand { get; }
+        public ICommand ToggleSleepCommand { get; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -70,11 +108,33 @@ namespace DeskWatch.Desktop.ViewModels
             _deviceService.Synchronized += OnSynchronized;
             _deviceService.SynchronizeFailed += OnSynchronizeFailed;
 
-            ConnectCommand = new RelayCommand(async (_) => await _deviceService.ConnectAsync(), (_) => ConnectionStatus is ConnectionStatus.Offline or ConnectionStatus.Lost);
-            DisconnectCommand = new RelayCommand(async (_) => await _deviceService.DisconnectAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
-            SleepCommand = new RelayCommand(async (_) => await _deviceService.SleepAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected || (ConnectionStatus == ConnectionStatus.Offline && Port is not null && DeviceStatus != DeviceStatus.Sleeping));
-            WakeUpCommand = new RelayCommand(async (_) => await _deviceService.WakeUpAsync(), (_) => ConnectionStatus is ConnectionStatus.Offline or ConnectionStatus.Lost && DeviceStatus is DeviceStatus.Sleeping or DeviceStatus.Unknown);
-            SynchronizeCommand = new RelayCommand(async (_) => await _deviceService.SynchronizeAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
+            Events = CollectionViewSource.GetDefaultView(EventStore.Instance.Events);
+            Events.Filter = IsEventVisible;
+
+            ToggleConnectionCommand = new RelayCommand(
+                async (_) =>
+                {
+                    if (ConnectionStatus == ConnectionStatus.Connected) await _deviceService.DisconnectAsync();
+                    else await _deviceService.ConnectAsync();
+                },
+                (_) => ConnectionStatus != ConnectionStatus.Connecting && DeviceStatus != DeviceStatus.Sleeping);
+
+            ToggleSleepCommand = new RelayCommand(
+                async (_) =>
+                {
+                    if (CanWakeUp) await _deviceService.WakeUpAsync();
+                    else await _deviceService.SleepAsync();
+                },
+                (_) => CanWakeUp || ConnectionStatus == ConnectionStatus.Connected || (ConnectionStatus == ConnectionStatus.Offline && _port is not null));
+        }
+
+        private bool IsEventVisible(object item)
+        {
+            var model = (EventModel)item;
+
+            return _showSynchronizationEvents
+                || model.Level == "ERR"
+                || model.Event is not (DEVICE_SYNCHRONIZED_EVENT or APPLICATION_SYNCHRONIZED_EVENT);
         }
 
         private void OnDeviceStatusChanged(object? sender, DeviceStatus status)
@@ -82,34 +142,55 @@ namespace DeskWatch.Desktop.ViewModels
             Application.Current.Dispatcher.Invoke(() =>
             {
                 DeviceStatus = status;
-                CommandManager.InvalidateRequerySuggested();
+                Refresh();
             });
         }
 
-        private void OnSynchronized(object? sender, DateTime time)
+        private void OnSynchronized(object? sender, string displayTime)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {
-                LastUpdated = DateTime.Now;
-                ClockTime = time;
-                SynchronizationStatus = SynchronizationStatus.Synced;
+                _lastUpdated = DateTime.Now;
+                _displayedTime = displayTime;
+                _synchronizationFailed = false;
+                Refresh();
             });
         }
 
         private void OnSynchronizeFailed(object? sender, EventArgs e)
         {
-            Application.Current.Dispatcher.Invoke(() => SynchronizationStatus = SynchronizationStatus.Failed);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _synchronizationFailed = true;
+                Refresh();
+            });
         }
 
         private void OnConnectionStatusChanged(object? sender, ConnectionStatus status)
         {
-            Port = _deviceService.Port;
+            _port = _deviceService.Port;
             ConnectionStatus = status;
-            LastUpdated = DateTime.Now;
+            _lastUpdated = DateTime.Now;
 
-            if (status != ConnectionStatus.Connected) ClockTime = null;
+            if (status != ConnectionStatus.Connected)
+            {
+                _displayedTime = null;
+                _synchronizationFailed = false;
+            }
+
             if (status is ConnectionStatus.Connecting or ConnectionStatus.Lost) DeviceStatus = DeviceStatus.Unknown;
-            if (status is ConnectionStatus.Connecting or ConnectionStatus.Offline) SynchronizationStatus = SynchronizationStatus.Idle;
+
+            Refresh();
+        }
+
+        private void Refresh()
+        {
+            NotifyPropertyChanged(nameof(ConnectionStatus));
+            NotifyPropertyChanged(nameof(DeviceStatus));
+            NotifyPropertyChanged(nameof(Status));
+            NotifyPropertyChanged(nameof(StatusDetail));
+            NotifyPropertyChanged(nameof(DisplayText));
+            NotifyPropertyChanged(nameof(CanWakeUp));
 
             // The status changes without user input, so the buttons would not refresh on their own.
             CommandManager.InvalidateRequerySuggested();

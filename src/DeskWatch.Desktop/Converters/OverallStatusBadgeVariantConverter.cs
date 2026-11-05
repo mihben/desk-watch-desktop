@@ -1,25 +1,21 @@
-﻿using DeskWatch.Desktop.Controls;
+using DeskWatch.Desktop.Controls;
 using DeskWatch.Desktop.ViewModels;
 using System.Globalization;
 using System.Windows.Data;
 
 namespace DeskWatch.Desktop.Converters
 {
-    public class ConnectionStatusBadgeVariantConverter : IValueConverter
+    public class OverallStatusBadgeVariantConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var status = (ConnectionStatus)value;
-
-            switch (status)
+            switch ((OverallStatus)value)
             {
-                case ConnectionStatus.Offline:
-                    return BadgeVariant.Neutral;
-                case ConnectionStatus.Connecting:
+                case OverallStatus.Connecting:
                     return BadgeVariant.Info;
-                case ConnectionStatus.Connected:
+                case OverallStatus.Connected:
                     return BadgeVariant.Success;
-                case ConnectionStatus.Lost:
+                case OverallStatus.Lost:
                     return BadgeVariant.Danger;
                 default: return BadgeVariant.Neutral;
             }

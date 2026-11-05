@@ -21,7 +21,7 @@ namespace DeskWatch.Desktop.Services
 
         public event EventHandler<ConnectionStatus>? ConnectionStatusChanged;
         public event EventHandler<DeviceStatus>? DeviceStatusChanged;
-        public event EventHandler<DateTime>? Synchronized;
+        public event EventHandler<string>? Synchronized;
         public event EventHandler? SynchronizeFailed;
 
         public DeviceService()
@@ -38,11 +38,11 @@ namespace DeskWatch.Desktop.Services
             DeviceStatusChanged?.Invoke(this, status);
         }
 
-        private void OnSynchronized(object? sender, DateTime time)
+        private void OnSynchronized(object? sender, string displayTime)
         {
             Application.Current.Dispatcher.Invoke(() =>
             EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.synchronized", "Time is synchronized."));
-            Synchronized?.Invoke(this, time);
+            Synchronized?.Invoke(this, displayTime);
         }
 
         private void OnDisconnected(object? sender, EventArgs e)

@@ -8,6 +8,7 @@
 
     public record EventModel
     {
+        public DateTime ReceivedAt { get; } = DateTime.Now;
         public required ulong Timestamp { get; init; }
         public required string Level { get; init; }
         public Source Source { get; set; }

@@ -50,7 +50,7 @@ namespace DeskWatch.Desktop.Drivers
         public event EventHandler<string>? Connected;
         public event EventHandler? ConnectionFailed;
         public event EventHandler? Disconnected;
-        public event EventHandler<DateTime>? Synchronized;
+        public event EventHandler<string>? Synchronized;
         public event EventHandler<DeviceStatus>? DeviceStatusChanged;
 
         public event EventHandler<DeviceEvent>? EventReceived;
@@ -100,7 +100,7 @@ namespace DeskWatch.Desktop.Drivers
             var displayTime = time.Second % 2 == 0 ? $"{time:HH:mm}" : $"{time:HH mm}";
 
             SendCommand($"{Commands.SET} {displayTime}", Events.TIME_SYNCHRONIZED, Events.SET_REJECTED);
-            Synchronized?.Invoke(this, time);
+            Synchronized?.Invoke(this, displayTime);
         }
 
         // The device also logs on its own, so a response is recognized by its event and not by its position.

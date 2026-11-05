@@ -44,42 +44,109 @@
         <Setter Property="Foreground" Value="{StaticResource Foreground.Primary}"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontFamily" Value="Segoe UI Variable"/>
-        <Setter Property="FontWeight" Value="Bold"/>
     </Style>
 
     <Style x:Key="Text.Secondary" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
         <Setter Property="Foreground" Value="{StaticResource Foreground.Secondary}"/>
     </Style>
 
+    <Style x:Key="Text.Muted" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
+        <Setter Property="Foreground" Value="{StaticResource Foreground.Muted}"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
     <Style x:Key="Text.Header" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
-        <Setter Property="FontSize" Value="24"/>
-        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="Text.Label" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
         <Setter Property="Foreground" Value="{StaticResource Foreground.Secondary}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
-    <Style x:Key="Text.Success" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource Text}">
-        <Setter Property="Foreground" Value="{StaticResource Foreground.Success}"/>
-        <Setter Property="FontWeight" Value="Bold"/>
+    <Style x:Key="Text.Display" TargetType="{x:Type TextBlock}">
+        <Setter Property="Foreground" Value="#FFFFFF"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="FontSize" Value="60"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="Display" TargetType="{x:Type Border}">
+        <Setter Property="Background" Value="#000000"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Height" Value="104"/>
     </Style>
 
     <Style x:Key="Icon" TargetType="{x:Type icon:MaterialIcon}">
         <Setter Property="Foreground" Value="{StaticResource Foreground.Primary}"/>
-        <Setter Property="Height" Value="28"/>
+        <Setter Property="Height" Value="20"/>
     </Style>
 
     <Style x:Key="Icon.Logo" TargetType="{x:Type icon:MaterialIcon}" BasedOn="{StaticResource Icon}">
     </Style>
 
-    <Style TargetType="{x:Type Button}">
-        <Setter Property="Height" Value="32"/>
-        <Setter Property="Background" Value="Transparent"/>
+    <Style TargetType="{x:Type ScrollBar}">
+        <Setter Property="Width" Value="10"/>
+        <Setter Property="MinWidth" Value="10"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type ScrollBar}">
+                    <Track x:Name="PART_Track" IsDirectionReversed="True">
+                        <Track.Thumb>
+                            <Thumb>
+                                <Thumb.Template>
+                                    <ControlTemplate TargetType="{x:Type Thumb}">
+                                        <Border Background="{StaticResource Border}" CornerRadius="3" Margin="2,0"/>
+                                    </ControlTemplate>
+                                </Thumb.Template>
+                            </Thumb>
+                        </Track.Thumb>
+                    </Track>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type CheckBox}">
         <Setter Property="Foreground" Value="{StaticResource Foreground.Secondary}"/>
-        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type CheckBox}">
+                    <StackPanel Orientation="Horizontal" Background="Transparent">
+                        <Border x:Name="Box" Width="14" Height="14" CornerRadius="3" BorderThickness="1" BorderBrush="{StaticResource Border.Neutral}" Background="{StaticResource Background.Surface}" Margin="0,0,6,0">
+                            <icon:MaterialIcon x:Name="Mark" Kind="Check" Width="12" Height="12" Foreground="{StaticResource Foreground.Primary}" Visibility="Collapsed"/>
+                        </Border>
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Mark" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource Background.Neutral}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type Button}">
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Background" Value="{StaticResource Background.Surface}"/>
+        <Setter Property="Foreground" Value="{StaticResource Foreground.Primary}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="BorderBrush" Value="{StaticResource Border.Subtle}"></Setter>
+        <Setter Property="BorderBrush" Value="{StaticResource Border}"></Setter>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Cursor" Value="Hand"/>
 
         <Setter Property="Template">
@@ -89,7 +156,7 @@
                 Background="{TemplateBinding Background}"
                 BorderBrush="{TemplateBinding BorderBrush}"
                 BorderThickness="{TemplateBinding BorderThickness}"
-                CornerRadius="16"
+                CornerRadius="8"
                 Padding="{TemplateBinding Padding}">
 
                         <ContentPresenter
@@ -103,9 +170,13 @@
 
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
-                <Setter Property="Background" Value="{StaticResource Background.Surface}"/>
-                <Setter Property="Foreground" Value="{StaticResource Foreground.Primary}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource Border.Neutral}"/>
+                <Setter Property="Background" Value="{StaticResource Background.Neutral}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="BorderBrush" Value="{StaticResource Border.Subtle}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{StaticResource Foreground.Disabled}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
