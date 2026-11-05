@@ -5,9 +5,9 @@ namespace DeskWatch.Desktop.Drivers
 {
     public enum DeviceStatus
     {
+        Unknown,
         Offline,
         Connected
-
     }
 
     public class DeviceDriver
@@ -30,6 +30,7 @@ namespace DeskWatch.Desktop.Drivers
             public const string CONNECTION_ESTABLISHED = "connection.established";
             public const string CONNECTION_REJECTED = "connection.command.rejected";
             public const string CONNECTION_CLOSED = "connection.closed";
+            public const string CONNECTION_LOST = "connection.lost";
             public const string DISCONNECTION_REJECTED = "disconnection.command.rejected";
             public const string TIME_SYNCHRONIZED = "time.synchronized";
             public const string SET_REJECTED = "set.command.rejected";
@@ -42,7 +43,8 @@ namespace DeskWatch.Desktop.Drivers
         public event EventHandler<string>? Connected;
         public event EventHandler? ConnectionFailed;
         public event EventHandler? Disconnected;
-        public event EventHandler? Synchronized;
+        public event EventHandler<DateTime>? Synchronized;
+        public event EventHandler<DeviceStatus>? DeviceStatusChanged;
 
         public event EventHandler<DeviceEvent>? EventReceived;
 
@@ -69,10 +71,12 @@ namespace DeskWatch.Desktop.Drivers
             Disconnected?.Invoke(this, EventArgs.Empty);
         }
 
-        public async Task SynchronizeAsync(string time)
+        public async Task SynchronizeAsync(DateTime time)
         {
-            SendCommand($"{Commands.SET} {time}", Events.TIME_SYNCHRONIZED, Events.SET_REJECTED);
-            Synchronized?.Invoke(this, EventArgs.Empty);
+            var displayTime = time.Second % 2 == 0 ? $"{time:HH:mm}" : $"{time:HH mm}";
+
+            SendCommand($"{Commands.SET} {displayTime}", Events.TIME_SYNCHRONIZED, Events.SET_REJECTED);
+            Synchronized?.Invoke(this, time);
         }
 
         // The device also logs on its own, so a response is recognized by its event and not by its position.
@@ -88,6 +92,7 @@ namespace DeskWatch.Desktop.Drivers
                     ?? throw new JsonException("The device sent an empty response.");
 
                 EventReceived?.Invoke(this, response);
+                UpdateDeviceStatus(response.Event);
 
                 if (response.Event == successEvent) return;
                 if (response.Event == rejectedEvent) throw new DeviceCommandRejectedException(response.Message);
@@ -97,6 +102,21 @@ namespace DeskWatch.Desktop.Drivers
             }
 
             throw new TimeoutException($"No response to the {command} command.");
+        }
+
+        private void UpdateDeviceStatus(string deviceEvent)
+        {
+            switch (deviceEvent)
+            {
+                case Events.DEVICE_STARTED:
+                case Events.CONNECTION_CLOSED:
+                case Events.CONNECTION_LOST:
+                    DeviceStatusChanged?.Invoke(this, DeviceStatus.Offline);
+                    break;
+                case Events.CONNECTION_ESTABLISHED:
+                    DeviceStatusChanged?.Invoke(this, DeviceStatus.Connected);
+                    break;
+            }
         }
 
         public Task CloseAsync()

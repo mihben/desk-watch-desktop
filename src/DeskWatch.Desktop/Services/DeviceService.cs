@@ -20,7 +20,8 @@ namespace DeskWatch.Desktop.Services
         public string? Port { get; private set; }
 
         public event EventHandler<ConnectionStatus>? ConnectionStatusChanged;
-        public event EventHandler? Synchronized;
+        public event EventHandler<DeviceStatus>? DeviceStatusChanged;
+        public event EventHandler<DateTime>? Synchronized;
         public event EventHandler? SynchronizeFailed;
 
         public DeviceService()
@@ -29,13 +30,19 @@ namespace DeskWatch.Desktop.Services
             _driver.Disconnected += OnDisconnected;
             _driver.EventReceived += OnEventReceived;
             _driver.Synchronized += OnSynchronized;
+            _driver.DeviceStatusChanged += OnDeviceStatusChanged;
         }
 
-        private void OnSynchronized(object? sender, EventArgs e)
+        private void OnDeviceStatusChanged(object? sender, DeviceStatus status)
+        {
+            DeviceStatusChanged?.Invoke(this, status);
+        }
+
+        private void OnSynchronized(object? sender, DateTime time)
         {
             Application.Current.Dispatcher.Invoke(() =>
             EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.synchronized", "Time is synchronized."));
-            Synchronized?.Invoke(this, EventArgs.Empty);
+            Synchronized?.Invoke(this, time);
         }
 
         private void OnDisconnected(object? sender, EventArgs e)
@@ -158,12 +165,7 @@ namespace DeskWatch.Desktop.Services
         {
             try
             {
-                await RunOnDriverAsync(() =>
-                {
-                    var time = DateTime.Now;
-                    if (time.Second % 2 == 0) return _driver.SynchronizeAsync($"{time:HH:mm}");
-                    return _driver.SynchronizeAsync($"{time:HH mm}");
-                });
+                await RunOnDriverAsync(() => _driver.SynchronizeAsync(DateTime.Now));
             }
             catch (Exception ex) when (ex is TimeoutException or JsonException)
             {

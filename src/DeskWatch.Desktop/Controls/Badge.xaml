@@ -61,6 +61,6 @@
     </UserControl.Resources>
     
     <Border Style="{StaticResource Badge}" Margin="4,0,0,0">
-        <TextBlock Style="{StaticResource Badge.Text}" Text="{Binding ConnectionStatus}"></TextBlock>
+        <TextBlock Style="{StaticResource Badge.Text}" Text="{Binding Value, ElementName=Root}"></TextBlock>
     </Border>
 </UserControl>

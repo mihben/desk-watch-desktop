@@ -1,4 +1,5 @@
 ﻿using DeskWatch.Desktop.Commands;
+using DeskWatch.Desktop.Drivers;
 using DeskWatch.Desktop.Models;
 using DeskWatch.Desktop.Services;
 using DeskWatch.Desktop.Stores;
@@ -15,6 +16,13 @@ namespace DeskWatch.Desktop.ViewModels
         Connecting,
         Connected,
         Lost
+    }
+
+    public enum SynchronizationStatus
+    {
+        Idle,
+        Synced,
+        Failed
     }
 
     public class MainViewModel : INotifyPropertyChanged
@@ -36,6 +44,15 @@ namespace DeskWatch.Desktop.ViewModels
         public DateTime? _lastUpdate;
         public DateTime? LastUpdated { get { return _lastUpdate; } set { _lastUpdate = value; NotifyPropertyChanged(nameof(LastUpdated)); } }
 
+        private DateTime? _clockTime;
+        public DateTime? ClockTime { get { return _clockTime; } set { _clockTime = value; NotifyPropertyChanged(nameof(ClockTime)); } }
+
+        private DeviceStatus _deviceStatus = DeviceStatus.Unknown;
+        public DeviceStatus DeviceStatus { get { return _deviceStatus; } set { _deviceStatus = value; NotifyPropertyChanged(nameof(DeviceStatus)); } }
+
+        private SynchronizationStatus _synchronizationStatus = SynchronizationStatus.Idle;
+        public SynchronizationStatus SynchronizationStatus { get { return _synchronizationStatus; } set { _synchronizationStatus = value; NotifyPropertyChanged(nameof(SynchronizationStatus)); } }
+
         public ICommand ConnectCommand { get; }
         public ICommand DisconnectCommand { get; }
         public ICommand SynchronizeCommand { get; }
@@ -47,16 +64,33 @@ namespace DeskWatch.Desktop.ViewModels
         public MainViewModel()
         {
             _deviceService.ConnectionStatusChanged += OnConnectionStatusChanged;
+            _deviceService.DeviceStatusChanged += OnDeviceStatusChanged;
             _deviceService.Synchronized += OnSynchronized;
+            _deviceService.SynchronizeFailed += OnSynchronizeFailed;
 
             ConnectCommand = new RelayCommand(async (_) => await _deviceService.ConnectAsync(), (_) => ConnectionStatus is ConnectionStatus.Offline or ConnectionStatus.Lost);
             DisconnectCommand = new RelayCommand(async (_) => await _deviceService.DisconnectAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
             SynchronizeCommand = new RelayCommand(async (_) => await _deviceService.SynchronizeAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
         }
 
-        private void OnSynchronized(object? sender, EventArgs e)
+        private void OnDeviceStatusChanged(object? sender, DeviceStatus status)
         {
-            Application.Current.Dispatcher.Invoke(() => LastUpdated = DateTime.Now);
+            Application.Current.Dispatcher.Invoke(() => DeviceStatus = status);
+        }
+
+        private void OnSynchronized(object? sender, DateTime time)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                LastUpdated = DateTime.Now;
+                ClockTime = time;
+                SynchronizationStatus = SynchronizationStatus.Synced;
+            });
+        }
+
+        private void OnSynchronizeFailed(object? sender, EventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() => SynchronizationStatus = SynchronizationStatus.Failed);
         }
 
         private void OnConnectionStatusChanged(object? sender, ConnectionStatus status)
@@ -64,6 +98,13 @@ namespace DeskWatch.Desktop.ViewModels
             Port = _deviceService.Port;
             ConnectionStatus = status;
             LastUpdated = DateTime.Now;
+
+            if (status != ConnectionStatus.Connected) ClockTime = null;
+            if (status is ConnectionStatus.Connecting or ConnectionStatus.Lost) DeviceStatus = DeviceStatus.Unknown;
+            if (status is ConnectionStatus.Connecting or ConnectionStatus.Offline) SynchronizationStatus = SynchronizationStatus.Idle;
+
+            // The status changes without user input, so the buttons would not refresh on their own.
+            CommandManager.InvalidateRequerySuggested();
         }
 
         private void NotifyPropertyChanged(string propertyName)

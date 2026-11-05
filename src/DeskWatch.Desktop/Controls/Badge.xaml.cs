@@ -28,8 +28,8 @@ namespace DeskWatch.Desktop.Controls
 
         public string Value
         {
-            get => (string)GetValue(VariantProperty);
-            set => SetValue(VariantProperty, value);
+            get => (string)GetValue(ValueProperty);
+            set => SetValue(ValueProperty, value);
         }
 
         public Badge()
