@@ -7,7 +7,8 @@ namespace DeskWatch.Desktop.Drivers
     {
         Unknown,
         Offline,
-        Connected
+        Connected,
+        Sleeping
     }
 
     public class DeviceDriver
@@ -21,6 +22,7 @@ namespace DeskWatch.Desktop.Drivers
         {
             public const string CONNECT = "CONNECT";
             public const string DISCONNECT = "DISCONNECT";
+            public const string SLEEP = "SLEEP";
             public const string SET = "SET";
         }
 
@@ -32,6 +34,8 @@ namespace DeskWatch.Desktop.Drivers
             public const string CONNECTION_CLOSED = "connection.closed";
             public const string CONNECTION_LOST = "connection.lost";
             public const string DISCONNECTION_REJECTED = "disconnection.command.rejected";
+            public const string DEVICE_ASLEEP = "device.asleep";
+            public const string SLEEP_REJECTED = "sleep.command.rejected";
             public const string TIME_SYNCHRONIZED = "time.synchronized";
             public const string SET_REJECTED = "set.command.rejected";
         }
@@ -69,6 +73,11 @@ namespace DeskWatch.Desktop.Drivers
         {
             SendCommand(Commands.DISCONNECT, Events.CONNECTION_CLOSED, Events.DISCONNECTION_REJECTED);
             Disconnected?.Invoke(this, EventArgs.Empty);
+        }
+
+        public async Task SleepAsync()
+        {
+            SendCommand(Commands.SLEEP, Events.DEVICE_ASLEEP, Events.SLEEP_REJECTED);
         }
 
         public async Task SynchronizeAsync(DateTime time)
@@ -115,6 +124,9 @@ namespace DeskWatch.Desktop.Drivers
                     break;
                 case Events.CONNECTION_ESTABLISHED:
                     DeviceStatusChanged?.Invoke(this, DeviceStatus.Connected);
+                    break;
+                case Events.DEVICE_ASLEEP:
+                    DeviceStatusChanged?.Invoke(this, DeviceStatus.Sleeping);
                     break;
             }
         }

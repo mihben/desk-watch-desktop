@@ -161,6 +161,28 @@ namespace DeskWatch.Desktop.Services
             }
         }
 
+        public async Task SleepAsync()
+        {
+            // The device refuses to sleep while it is connected.
+            if (Status == ConnectionStatus.Connected) await DisconnectAsync();
+            if (Status != ConnectionStatus.Offline) return;
+
+            try
+            {
+                await RunOnDriverAsync(_driver.SleepAsync);
+                EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.asleep", "Device is sleeping.");
+            }
+            catch (DeviceCommandRejectedException ex)
+            {
+                EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.sleep.rejected", $"The device rejected sleeping. {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                EventStore.Instance.AddApplicationMessageEvent(0, "ERR", "application.sleep.failed", $"Sleeping failed. {ex.Message}");
+                Status = ConnectionStatus.Lost;
+            }
+        }
+
         public async Task SynchronizeAsync()
         {
             try

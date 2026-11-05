@@ -55,6 +55,7 @@ namespace DeskWatch.Desktop.ViewModels
 
         public ICommand ConnectCommand { get; }
         public ICommand DisconnectCommand { get; }
+        public ICommand SleepCommand { get; }
         public ICommand SynchronizeCommand { get; }
 
         public ReadOnlyObservableCollection<EventModel> Events { get; } = EventStore.Instance.Events;
@@ -70,12 +71,17 @@ namespace DeskWatch.Desktop.ViewModels
 
             ConnectCommand = new RelayCommand(async (_) => await _deviceService.ConnectAsync(), (_) => ConnectionStatus is ConnectionStatus.Offline or ConnectionStatus.Lost);
             DisconnectCommand = new RelayCommand(async (_) => await _deviceService.DisconnectAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
+            SleepCommand = new RelayCommand(async (_) => await _deviceService.SleepAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected || (ConnectionStatus == ConnectionStatus.Offline && Port is not null && DeviceStatus != DeviceStatus.Sleeping));
             SynchronizeCommand = new RelayCommand(async (_) => await _deviceService.SynchronizeAsync(), (_) => ConnectionStatus == ConnectionStatus.Connected);
         }
 
         private void OnDeviceStatusChanged(object? sender, DeviceStatus status)
         {
-            Application.Current.Dispatcher.Invoke(() => DeviceStatus = status);
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                DeviceStatus = status;
+                CommandManager.InvalidateRequerySuggested();
+            });
         }
 
         private void OnSynchronized(object? sender, DateTime time)

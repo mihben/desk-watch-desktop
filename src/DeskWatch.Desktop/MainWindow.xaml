@@ -170,7 +170,7 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Margin="0,0,4,4">
+                        <Button Margin="0,0,4,4" Command="{Binding SleepCommand}">
                             <StackPanel Orientation="Horizontal">
                                 <icons:MaterialIcon Kind="MoonWaningCrescent" Margin="0,0,4,0" Height="16"/>
                                 <TextBlock Text="Sleep"></TextBlock>
