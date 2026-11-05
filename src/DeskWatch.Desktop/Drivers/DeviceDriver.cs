@@ -32,13 +32,16 @@ namespace DeskWatch.Desktop.Drivers
 
         public async Task ConnectAsync(string port)
         {
-            if (_serial is null)
+            if (_serial is not null)
             {
-                _serial = new SerialPort(port, 9600);
-
-                _serial.Open();
-                _serial.ReadTimeout = 3000;
+                _serial.Close();
+                _serial = null;
             }
+
+            _serial = new SerialPort(port, 9600);
+
+            _serial.Open();
+            _serial.ReadTimeout = 3000;
 
             _serial.WriteLine(CONNECT);
 
