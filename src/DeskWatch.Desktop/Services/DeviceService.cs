@@ -10,6 +10,7 @@ namespace DeskWatch.Desktop.Services
     public class DeviceService
     {
         private readonly DeviceDriver _driver = new();
+        private readonly SemaphoreSlim _driverLock = new(1, 1);
         private CancellationTokenSource? _synchronizationCancellation;
         private Task? _synchronizationTask;
 
@@ -38,7 +39,7 @@ namespace DeskWatch.Desktop.Services
 
         private void OnDisconnected(object? sender, EventArgs e)
         {
-            Status = ConnectionStatus.Offline;
+            Application.Current.Dispatcher.Invoke(() => Status = ConnectionStatus.Offline);
             EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.disconnected", "Device disconnected.");
         }
 
@@ -49,11 +50,28 @@ namespace DeskWatch.Desktop.Services
 
         private void OnConnected(object? sender, string port)
         {
-            Port = port;
-            Status = ConnectionStatus.Connected;
-            EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.connected", $"Device is connected on {port} port.");
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                Port = port;
+                Status = ConnectionStatus.Connected;
+                EventStore.Instance.AddApplicationMessageEvent(0, "INF", "application.connected", $"Device is connected on {port} port.");
 
-            StartPeriodicSynchronization();
+                StartPeriodicSynchronization();
+            });
+        }
+
+        // The driver blocks while it waits for the device and handles one request at a time.
+        private async Task RunOnDriverAsync(Func<Task> action)
+        {
+            await _driverLock.WaitAsync();
+            try
+            {
+                await Task.Run(action);
+            }
+            finally
+            {
+                _driverLock.Release();
+            }
         }
 
         private void StartPeriodicSynchronization()
@@ -113,7 +131,7 @@ namespace DeskWatch.Desktop.Services
 
                 try
                 {
-                    await _driver.ConnectAsync(port);
+                    await RunOnDriverAsync(() => _driver.ConnectAsync(port));
                 }
                 catch (Exception ex)
                 {
@@ -128,7 +146,7 @@ namespace DeskWatch.Desktop.Services
 
             try
             {
-                await _driver.DisconnectAsync();
+                await RunOnDriverAsync(_driver.DisconnectAsync);
             }
             catch (Exception ex)
             {
@@ -139,9 +157,12 @@ namespace DeskWatch.Desktop.Services
 
         public async Task SynchronizeAsync()
         {
-            var time = DateTime.Now;
-            if (time.Second % 2 == 0) await _driver.SynchronizeAsync($"{time:HH:mm}");
-            else await _driver.SynchronizeAsync($"{time:HH mm}");
+            await RunOnDriverAsync(() =>
+            {
+                var time = DateTime.Now;
+                if (time.Second % 2 == 0) return _driver.SynchronizeAsync($"{time:HH:mm}");
+                return _driver.SynchronizeAsync($"{time:HH mm}");
+            });
         }
 
         public async Task CloseAsync()
@@ -149,7 +170,7 @@ namespace DeskWatch.Desktop.Services
             if (Status == ConnectionStatus.Connected) await DisconnectAsync();
             else await StopPeriodicSynchronizationAsync();
 
-            await _driver.CloseAsync();
+            await RunOnDriverAsync(_driver.CloseAsync);
         }
     }
 }
